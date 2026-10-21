@@ -1,0 +1,30 @@
+name: Bootstrap governance validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  governance-files:
+    name: governance-files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposed source (unprivileged)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify bootstrap documents
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in README.md AGENTS.md CONTRIBUTING.md SECURITY.md docs/PROJECT_STATUS.md docs/EXTERNAL_ACTIVITY.md docs/BUILD_AND_RELEASE.md; do
+            if [[ ! -s "$file" ]]; then
+              echo "::error::Missing or empty governance file: $file"
+              exit 1
+            fi
+          done
+          echo "::notice::Governance files present; no application build, tests or Windows validation performed."
