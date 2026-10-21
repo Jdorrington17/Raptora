@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: governance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -12,6 +16,7 @@ jobs:
   governance-files:
     name: governance-files
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout proposed source (unprivileged)
         uses: actions/checkout@v4
@@ -28,6 +33,6 @@ jobs:
             fi
           done
           echo "::notice::Governance files present; no application build, tests or Windows validation performed."
-      - name: Validate specialist agent configuration
+      - name: Verify governance environment, agent and skill configuration
         shell: bash
-        run: python3 scripts/validate-agent-config.py
+        run: python3 scripts/verify-development-environment.py

@@ -21,3 +21,13 @@ Describe the requested change and its corresponding issue or decision.
 ## Review
 - [ ] Outside contributions require manual maintainer review
 - [ ] No merge or deployment without explicit approval
+
+## Acceptance and review evidence
+- Approved requirement/issue and acceptance criteria:
+- Affected API/data/persisted contracts and compatibility:
+- Source HEAD/tested SHA and dirty-tree state for local evidence:
+- Required specialist stages and findings (public-safe only):
+- Skipped/blocked/not-run gates and approval owner:
+- Previous active task/branch checked to avoid duplicate work:
+- [ ] Applicable required checks and independent maintainer review must pass before merge
+- [ ] This draft does not authorize migration, connected testing, signing or release

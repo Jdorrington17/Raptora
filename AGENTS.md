@@ -148,3 +148,7 @@ The primary agent coordinates the five roles in `.codex/agents/`: `architect`, `
 Keep at most three active threads including the primary; use fewer for straightforward work. Delegate independent tasks only, assign file ownership and acceptance criteria, prohibit recursive delegation and consolidate evidence before integration. Role instructions do not grant permissions or guarantee sandbox isolation. CLI configuration is not proof of Cloud role loading.
 
 Use Requirement → Architecture Review → Implementation → Security Review → Testing → Pull Request → Approval, applying the relevant stages. Work on a focused branch, preserve existing safeguards and require maintainer review; do not self-merge. Configuration setup does not authorize private-source migration, product implementation, connected tests or deployment.
+
+## Engineering hardening references
+
+Use the focused project skills under `.agents/skills/` when relevant; see [skill usage](docs/AGENT_SKILLS.md). Start with [environment verification](docs/CODEX_ENVIRONMENT.md) and report current evidence using [recovery and handover](docs/AGENT_RECOVERY.md). The [configuration register](docs/CODEX_CONFIGURATION_REGISTER.md) distinguishes verified, manual and deferred controls. Keep disagreements evidence-based: the primary resolves scope/ownership conflicts and escalates unresolved safety or acceptance decisions to the maintainer without inventing approval. Do not start the private legacy audit until Step 2 is completed and reviewed; its public-safe procedure grants no access or publication authority.

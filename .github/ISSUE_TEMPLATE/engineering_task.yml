@@ -1,0 +1,27 @@
+name: Engineering requirement
+description: Propose a scoped requirement and acceptance criteria for review.
+body:
+  - type: markdown
+    attributes:
+      value: "An issue is a proposal, not approval for migration, publication, privileged tests or deployment. Keep all content public-safe."
+  - type: textarea
+    id: requirement
+    attributes:
+      label: Requirement, purpose and boundaries
+      description: Include affected components and exclusions; no private implementation or client information.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria and verification
+      description: Observable results, regression risks and required platforms; identify unavailable source or test targets.
+    validations:
+      required: true
+  - type: textarea
+    id: approvals
+    attributes:
+      label: Dependencies, review and approvals
+      description: Proposed architecture/security/QA/Windows reviews, rights/provenance needs and decision owner. Maintainers must explicitly approve scope before implementation.
+    validations:
+      required: true

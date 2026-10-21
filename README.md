@@ -25,3 +25,8 @@ Raptora is a security-system diagnostics and reporting application under active 
 No software licence is granted by the presence of source code in this public repository. Copyright and contribution-licensing decisions must be documented before outside code is integrated.
 
 Do not submit credentials, customer data, recordings, evidence images, access details or confidential architecture diagrams.
+
+
+## Codex engineering setup
+
+The current tree provides governance and agent/skill infrastructure, not migrated application source. See the [configuration register](docs/CODEX_CONFIGURATION_REGISTER.md), [environment startup](docs/CODEX_ENVIRONMENT.md), [agent/skill usage](docs/AGENT_USAGE.md) and [validation results](docs/AGENT_VALIDATION.md). Application and Windows release checks remain source-gated; no installed behavior is certified by these files.
