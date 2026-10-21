@@ -1,0 +1,7 @@
+# Validated against Codex CLI 0.163.0. Inherit model, permissions and sandbox.
+[agents]
+enabled = true
+# V1: two children plus primary. V2: two total. Both stay within three total.
+max_concurrent_threads_per_session = 2
+# V1 nesting guard; V2 ignores this, so role instructions also prohibit delegation.
+max_depth = 1

@@ -28,3 +28,6 @@ jobs:
             fi
           done
           echo "::notice::Governance files present; no application build, tests or Windows validation performed."
+      - name: Validate specialist agent configuration
+        shell: bash
+        run: python3 scripts/validate-agent-config.py

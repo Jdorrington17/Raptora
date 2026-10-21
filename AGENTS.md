@@ -36,3 +36,115 @@ Every PR summary must record scope, files, test commands/results or not-run stat
 
 ## Outside contributions
 Public activity is monitored at the metadata level. Handle reports and PRs professionally; do not attempt to identify anonymous visitors, collect IP addresses, or disclose security reports publicly.
+
+## Preserved product engineering requirements
+
+# Raptora product engineering requirements
+
+## Product
+Raptora is a proprietary, local-first security monitoring,
+diagnostics, evidence and reporting platform.
+
+The installed application must operate independently of
+ChatGPT, Codex and external AI services.
+
+## Architecture
+Preserve and improve the existing architecture:
+- React/TypeScript desktop interface
+- Continuously operating Windows core service
+- Isolated worker/adaptor execution
+- Milestone XProtect integration
+- PowerShell collectors behind controlled boundaries
+- Persistent configuration, diagnostic history and evidence
+- Controlled Windows installation, update, repair and rollback
+
+Do not replace established technologies without evidence,
+a migration plan and explicit approval.
+
+## Development ownership
+This repository is the primary Raptora source of truth.
+The legacy Certis-Milestone repository is read-only
+migration reference material.
+
+Never assume the legacy main branch is the newest baseline.
+Inspect source branches, releases and manifests first.
+
+## Engineering requirements
+1. Inspect existing code before making changes.
+2. Prefer minimal, maintainable and testable changes.
+3. Preserve existing working functionality.
+4. Keep the interface, service and workers separated.
+5. Use typed contracts and explicit error handling.
+6. Maintain backward-compatible persisted data where feasible.
+7. Never hardcode credentials or client information.
+8. Do not commit runtime data, logs, secrets or evidence.
+9. Use test fixtures or synthetic data for development.
+10. Update relevant documentation when changing behavior.
+
+## Diagnostic lifecycle
+Detect → Diagnose → Correlate → Refine Diagnosis →
+Rectify → Verify → Monitor
+
+Represent condition, severity, confidence, applicability
+and issue state independently.
+
+## Windows deployment
+Maintain support for:
+- Install
+- Configure
+- Validate
+- Operate
+- Update
+- Repair
+- Rollback
+
+Preserve service identity, installation paths and stored
+configuration until an approved migration changes them.
+
+Never delete ProgramData or reset user configuration
+as a routine repair or upgrade action.
+
+## Quality gates
+For every substantive change:
+- Identify impacted modules.
+- Run relevant existing tests.
+- Add regression coverage where practical.
+- Report tests that could not run.
+- Validate Windows-specific changes on Windows.
+- Confirm installer and rollback compatibility when impacted.
+- Document known limitations.
+
+Do not claim that Linux test success validates Windows
+service or installer functionality.
+
+## Git workflow
+- Do not commit directly to main.
+- Use focused feature or fix branches.
+- Use pull requests for integration.
+- Do not force-push protected branches.
+- Do not merge failing required checks.
+- Preserve release tags and source provenance.
+
+## Work reporting
+At the end of each task, report:
+1. What changed
+2. Files affected
+3. Tests executed and results
+4. Risks or unresolved issues
+5. Recommended next action
+
+## Security
+Treat client site information, camera names,
+IP addresses, credentials, access control data
+and security topology as sensitive.
+
+Do not introduce telemetry, external connections,
+remote access or production deployment without approval.
+
+## Specialist orchestration
+
+The primary agent coordinates the five roles in `.codex/agents/`: `architect`, `developer`, `security-reviewer`, `qa-engineer` and `windows-deployment`. Read [agent architecture](docs/AGENT_ARCHITECTURE.md), [workflow](docs/AGENT_WORKFLOW.md) and [usage](docs/AGENT_USAGE.md).
+
+Keep at most three active threads including the primary; use fewer for straightforward work. Delegate independent tasks only, assign file ownership and acceptance criteria, prohibit recursive delegation and consolidate evidence before integration. Role instructions do not grant permissions or guarantee sandbox isolation. CLI configuration is not proof of Cloud role loading.
+
+Use Requirement → Architecture Review → Implementation → Security Review → Testing → Pull Request → Approval, applying the relevant stages. Work on a focused branch, preserve existing safeguards and require maintainer review; do not self-merge. Configuration setup does not authorize private-source migration, product implementation, connected tests or deployment.
