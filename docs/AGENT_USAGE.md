@@ -39,3 +39,9 @@ The CLI cap is conservative: two child workers under V1, or two total threads un
 Use a single agent for straightforward changes. Parallelize only independent questions with separate ownership. Reuse context, request concise evidence, stop duplicate work and report unresolved conflicts. Inherit the session model instead of pinning models or reasoning effort in role files. Activate five roles as needed across the workflow, not all at once.
 
 The repository still contains governance rather than migrated application source. No application, Windows, installer or connected-system acceptance is implied. See [validation results](AGENT_VALIDATION.md), [architecture](AGENT_ARCHITECTURE.md) and [workflow](AGENT_WORKFLOW.md).
+
+## Step 2 startup, skills and interrupted work
+
+Use [CODEX_ENVIRONMENT.md](CODEX_ENVIRONMENT.md) and `python3 scripts/verify-development-environment.py` for the source-free engineering workflow. The four [project skills](AGENT_SKILLS.md) supply focused verification, diagnostic, Windows-review and PR-handover references. Actual CLI discovery is recorded separately from manual skill application and automatic Cloud loading.
+
+Recover interrupted work through [AGENT_RECOVERY.md](AGENT_RECOVERY.md): inspect branch/HEAD/status, current worker ownership and pending command evidence first. Retain earlier results only for their exact tested source and platform; re-run affected checks after changes or uncertainty rather than claiming revalidation. When specialists disagree, compare evidence/acceptance criteria, serialize conflicting files and have the primary resolve scope; escalate unresolved security, architecture or release decisions to the maintainer. Do not launch recursive or recurring agents.

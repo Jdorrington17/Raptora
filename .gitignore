@@ -42,3 +42,7 @@ ProgramData/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local Python validation caches
+__pycache__/
+*.py[cod]

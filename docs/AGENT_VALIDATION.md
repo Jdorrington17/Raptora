@@ -43,3 +43,16 @@ The documentation website returned HTTP 403 from this environment. The official 
 - [0.163.0 concurrency accounting](https://github.com/openai/codex/blob/rust-v0.163.0/codex-rs/core/src/config/mod.rs)
 
 Release tag `rust-v0.163.0` resolves to `83086188ae0614bd882818ff1aa23f3194962012`. Current official source was also inspected at `c7234c1174b27d9c55199fba0d546dc27d1b0415`; the configured fields and role parser agreed with the installed-release reference. No upstream code was copied into this repository.
+
+## Step 2 hardening evidence
+
+- Same five role files and project settings preserved; the version-matched schema still validates them. Project instructions were read by the primary and scoped reviewers; automatic instruction loading in a fresh Cloud client remains unverified.
+- CLI 0.163.0 strict app-server initialization/config-read smoke passed in an isolated user-layer copy. `python3 scripts/check-codex-runtime.py` passed. Installed CLI `skills/list` discovered all four project skills at their repository paths as enabled, with zero project skill errors. No model turn, login, trust bypass or custom-role invocation was performed by that smoke test.
+- Four reference scenarios were dry-run via generic delegated workers using explicit skill instructions. All produced the expected evidence/approval boundaries. Existing baseline answers were already safe; no measured behavioral improvement or automatic Cloud invocation is claimed.
+- `python3 scripts/verify-development-environment.py` passed, including eight engineering-configuration regression tests (three invalid-type subcases). Four skill rejection tests first failed against the older role-only validator, then passed with skill validation implemented. These are governance tests, not application unit tests.
+- Current tools observed: Git 2.52.0, Python 3.12.14, Node 24.19.0, Codex CLI 0.163.0. pnpm/Corepack command paths exist but pnpm activation/version was not run; Windows PowerShell and dotnet were not found on PATH. Node/pnpm are unnecessary for the source-free check and no caches or dependencies were added.
+- Current branch protection, scanning settings, hosted checks and PR status remain unverified because GitHub API reads returned Forbidden. No administration was changed. Existing workflow permissions and metadata-only public-activity handling were preserved.
+
+See the [configuration register](CODEX_CONFIGURATION_REGISTER.md) for manual/deferred settings, [source activation plan](SOURCE_ACTIVATION_PLAN.md) for future Windows/application checks, and [private audit procedure](PRIVATE_MIGRATION_AUDIT.md) for the separately approved Step 3. No private legacy content was inspected or migrated during Step 2.
+
+Independent Step 2 review found and corrected an invalid plain-YAML description accepted by the restricted validator, plus locale-dependent test-file reads/writes. A failing colon-in-description regression now passes; tests use explicit UTF-8. Actual Windows execution remains Not run. The review also aligned older bootstrap wording with governance/configuration scope.

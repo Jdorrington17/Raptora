@@ -15,4 +15,12 @@ Contributors must have the right to contribute all submitted code. Do not copy p
 All outside PRs require manual review and must not receive write credentials, production privileges or unrestricted CI execution. Do not post exploit details in public issues; use the process in [SECURITY.md](SECURITY.md).
 
 ## Verification
-Current automated checks verify governance files only. They do not prove application correctness. When source is introduced, follow the documented project-specific test matrix.
+Current automated checks verify governance prerequisites and agent/skill configuration only. They do not prove application correctness. When source is introduced, follow the documented project-specific test matrix.
+
+## Codex-led work and review
+
+Before implementation, link an approved requirement and acceptance criteria; an opened issue is not itself authorization. Check existing tasks/branches/PRs and coordinate ownership before creating duplicate work. Use the [agent workflow](docs/AGENT_WORKFLOW.md), [focused skills](docs/AGENT_SKILLS.md) and [environment requirements](docs/CODEX_ENVIRONMENT.md). Keep at most three total threads including the primary, and use one for straightforward changes.
+
+Use the issue forms for public-safe bugs/requirements and the existing PR template for review evidence. Confidential security reports follow SECURITY.md; never attach operational logs, source from the private repository or actual evidence. External contributions need independent security/ownership review before acceptance.
+
+Run `python3 scripts/verify-development-environment.py` for current governance/configuration checks. Application build/tests are deferred until cleared source defines real commands; see the [activation plan](docs/SOURCE_ACTIVATION_PLAN.md). Document all outcomes, including Not run, and use [recovery guidance](docs/AGENT_RECOVERY.md) after interruption. Review [manual administration requirements](docs/CODEX_CONFIGURATION_REGISTER.md); documentation does not enable GitHub protection or approve publication.
