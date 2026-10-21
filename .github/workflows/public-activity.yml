@@ -1,0 +1,49 @@
+name: Public interaction audit
+
+# Records public GitHub interaction metadata only. Does not check out or run outside code.
+on:
+  watch:
+    types: [started]
+  fork:
+  issues:
+    types: [opened, reopened, closed]
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, reopened, synchronize, closed, ready_for_review]
+  pull_request_review:
+    types: [submitted]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  interaction-metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Record public interaction metadata (no checkout)
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          const actor = event.sender?.login || process.env.GITHUB_ACTOR || 'unknown';
+          const owner = process.env.GITHUB_REPOSITORY_OWNER || '';
+          const payload = {
+            observedAtUtc: new Date().toISOString(),
+            repository: process.env.GITHUB_REPOSITORY,
+            event: process.env.GITHUB_EVENT_NAME,
+            action: event.action || 'none',
+            publicActor: actor,
+            nonOwnerActor: actor.toLowerCase() !== owner.toLowerCase(),
+            issueNumber: event.issue?.number ?? null,
+            pullRequestNumber: event.pull_request?.number ?? null
+          };
+          const line = JSON.stringify(payload);
+          console.log(line);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            '### Public interaction metadata\n\n' +
+            '\`\`\`json\n' + JSON.stringify(payload, null, 2) + '\n\`\`\`\n');
+          NODE

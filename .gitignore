@@ -1,0 +1,44 @@
+# Dependencies and build outputs
+node_modules/
+.pnpm-store/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+*.log
+npm-debug.log*
+pnpm-debug.log*
+*.zip
+*.7z
+*.exe
+*.msi
+*.msix
+*.nupkg
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+*.key
+*.token
+secrets/
+credentials/
+
+# Runtime/customer material (do not add even with force)
+data/
+runtime/
+evidence/
+recordings/
+captures/
+logs/
+backups/
+ProgramData/
+
+# Local editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
