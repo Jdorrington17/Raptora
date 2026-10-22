@@ -1,0 +1,67 @@
+name: Raptora Windows Acceptance Runner Smoke
+
+# Deliberately manual-only. Do not add pull_request or pull_request_target.
+on:
+  workflow_dispatch:
+
+# This job only creates a public-safe diagnostic artifact.
+permissions: {}
+
+concurrency:
+  group: raptora-acceptance-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    # No runs from contributor branches or untrusted actors.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'Jdorrington17/Raptora' && github.ref == 'refs/heads/main' && github.actor == 'Jdorrington17' }}
+    runs-on: [self-hosted, Windows, X64, raptora-acceptance]
+    timeout-minutes: 10
+
+    steps:
+      - name: Verify Windows runner and produce sanitised evidence
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $directory = Join-Path $env:RUNNER_TEMP 'raptora-acceptance-smoke'
+          New-Item -ItemType Directory -Path $directory -Force | Out-Null
+
+          # Do not include hostname, IP addresses, paths, credentials or customer data.
+          $githubReachable = [bool](Test-NetConnection api.github.com -Port 443 -InformationLevel Quiet)
+          $serviceRunning = [bool](Get-Service 'actions.runner.*' -ErrorAction SilentlyContinue |
+            Where-Object { $_.Status -eq 'Running' } |
+            Select-Object -First 1)
+
+          $passed = $githubReachable -and $serviceRunning
+          $evidence = [ordered]@{
+            schema = 'raptora-runner-smoke-v1'
+            run_id = $env:GITHUB_RUN_ID
+            source_commit = $env:GITHUB_SHA
+            timestamp_utc = (Get-Date).ToUniversalTime().ToString('o')
+            platform = 'Windows'
+            github_https = $githubReachable
+            runner_service_running = $serviceRunning
+            result = if ($passed) { 'PASS' } else { 'FAIL' }
+          }
+
+          $evidence | ConvertTo-Json -Depth 4 |
+            Set-Content -LiteralPath (Join-Path $directory 'smoke.json') -Encoding UTF8
+
+          @(
+            '### Windows acceptance runner smoke'
+            ('- Result: **{0}**' -f $evidence.result)
+            ('- Run: {0}' -f $evidence.run_id)
+            '- Scope: read-only runner connectivity and service checks'
+            '- Detailed VM identifiers intentionally excluded'
+          ) | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding UTF8
+
+          if (-not $passed) { throw 'Runner smoke validation failed; see sanitised evidence.' }
+
+      - name: Upload sanitised evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: raptora-runner-smoke-${{ github.run_id }}
+          path: ${{ runner.temp }}\\raptora-acceptance-smoke\\smoke.json
+          if-no-files-found: error
+          retention-days: 14
