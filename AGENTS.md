@@ -1,5 +1,7 @@
 # Raptora engineering-agent instructions
 
+**Startup context:** Read [CODEX_CONTEXT.md](CODEX_CONTEXT.md) at the beginning of each new or resumed Codex task. Reconcile live GitHub issues/PRs and sanitised off-Codex findings before selecting work. The context file does not override the safety, source-migration or approval controls below.
+
 ## Scope and safety
 This is a public repository. Treat every commit, pull request, Actions log and artifact as publicly accessible, including history after later deletion.
 
