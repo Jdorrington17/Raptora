@@ -19,6 +19,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      # CMD is unaffected by PowerShell's Restricted policy. Always leave a fallback artifact.
+      - name: Initialise fallback evidence
+        shell: cmd
+        run: |
+          if not exist "%RUNNER_TEMP%\raptora-acceptance-smoke" mkdir "%RUNNER_TEMP%\raptora-acceptance-smoke"
+          echo {"schema":"raptora-runner-smoke-v1","run_id":"%GITHUB_RUN_ID%","source_commit":"%GITHUB_SHA%","result":"BLOCKED","reason":"powershell-smoke-not-completed"}>"%RUNNER_TEMP%\raptora-acceptance-smoke\smoke.json"
+
       - name: Verify Windows runner and produce sanitised evidence
         # Execution policy is restricted to this one process; no persistent setting is changed.
         # An enforced MachinePolicy/UserPolicy still takes precedence and must be reported.
