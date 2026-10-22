@@ -29,6 +29,6 @@ Do not submit credentials, customer data, recordings, evidence images, access de
 
 ## Codex engineering setup
 
-Start with the [Codex context and issue-intake brief](CODEX_CONTEXT.md), then follow `AGENTS.md` and the live GitHub issue tracker. Off-Codex observations must be sanitised and tracked as issues; chat history is not an implementation backlog.
+Start with [AGENTS.md](AGENTS.md), then read the [Codex context and issue-intake brief](CODEX_CONTEXT.md) and reconcile the live GitHub issue tracker. Off-Codex observations must be sanitised and tracked as issues; chat history is not an implementation backlog.
 
 The current tree provides governance and agent/skill infrastructure, not migrated application source. See the [configuration register](docs/CODEX_CONFIGURATION_REGISTER.md), [environment startup](docs/CODEX_ENVIRONMENT.md), [agent/skill usage](docs/AGENT_USAGE.md) and [validation results](docs/AGENT_VALIDATION.md). Application and Windows release checks remain source-gated; no installed behavior is certified by these files.

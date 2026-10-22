@@ -36,11 +36,11 @@ See [architecture](docs/ARCHITECTURE.md), [integration safeguards](docs/INTEGRAT
 
 ## 3. Live issue register — prioritise the GitHub tracker
 
-These are **external Windows-development observations awaiting source-level investigation and formal Windows acceptance**; they are not verified fixes or proof that the public repository contains the affected code.
+These are **external Windows-development observations awaiting verified remediation and formal Windows acceptance**; they are not verified fixes or proof that the public repository contains the affected code.
 
 | Issue | Concern | Required outcome |
 | --- | --- | --- |
-| [#4 — Locked files/running desktop processes](https://github.com/Jdorrington17/Raptora/issues/4) | Uninstall/update may encounter an Electron resource file-in-use / `EBUSY` condition while desktop processes are running. | Preflight detection, controlled application/service shutdown or a clear blocking prompt, safe failure/recovery, data preservation and upgrade/rollback regression coverage. |
+| [#4 — Locked files/running desktop processes](https://github.com/Jdorrington17/Raptora/issues/4) | Uninstall/update may encounter a packaged-resource file-in-use / `EBUSY` condition. Running desktops are one scenario to test; the lock owner must be established from evidence. | Preflight detection, controlled application/service shutdown or a clear blocking prompt, safe failure/recovery, data preservation and upgrade/rollback regression coverage. |
 | [#5 — Restricted PowerShell execution policy](https://github.com/Jdorrington17/Raptora/issues/5) | Default/restricted Windows PowerShell policies may block installer/maintenance scripts. | Supported install/maintenance without routine machine-wide policy changes; respect enforced organisational controls, use approved execution mechanisms, provide safe failure guidance and Windows policy-matrix tests. |
 
 **Release position:** Treat unresolved critical installer/update/rollback failures as production-release blockers until the maintainer has reviewed reproducible fixes and genuine Windows platform evidence. Issue creation does not approve implementation, source migration or deployment.
