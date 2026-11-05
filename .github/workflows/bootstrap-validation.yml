@@ -36,3 +36,8 @@ jobs:
       - name: Verify governance environment, agent and skill configuration
         shell: bash
         run: python3 scripts/verify-development-environment.py
+      - name: Validate packaging guidance structure and fail-closed cases
+        shell: bash
+        run: |
+          python3 scripts/validate-packaging-guides.py
+          python3 scripts/test-packaging-guides.py
