@@ -22,7 +22,7 @@ SECOND_LEVEL = re.compile(r"^##(?!#)\s+")
 FENCE = re.compile(r"^\s{0,3}([\x60~])\1{2,}")
 LINK = re.compile(r"!?\[[^\]]+\]\(([^)]+)\)")
 COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
-PLACEHOLDERS = {"todo", "tbd", "coming soon", "[placeholder]", "placeholder"}
+PLACEHOLDERS = {"todo", "tbd", "comingsoon", "[placeholder]", "placeholder"}
 
 
 class ValidationError(ValueError):
