@@ -220,6 +220,18 @@ class PackagingGuideTests(unittest.TestCase):
         self.set_first_body("### Future procedure")
         self.fail_validation()
 
+    def test_second_document_nested_heading_only_body_refuses(self):
+        path = self.path(DOC2)
+        text = path.read_text(encoding="utf-8")
+        first = "## PU-01: Reviewed prerequisites and build identity"
+        second = "## PU-02: Complete-package verification and launch"
+        self.assertEqual(text.count(first), 1)
+        self.assertEqual(text.count(second), 1)
+        start, end = text.index(first), text.index(second)
+        path.write_text(text[:start] + first + "\n### Future procedure\n\n" +
+                        text[end:], encoding="utf-8")
+        self.fail_validation()
+
     def test_reference_link_only_body_refuses(self):
         self.set_first_body("[Support][help]\n\n[help]: https://example.invalid")
         self.fail_validation()
