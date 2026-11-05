@@ -3,6 +3,7 @@
 These tests do NOT run the private package assembler or Windows acceptance.
 """
 from pathlib import Path
+import hashlib
 import json
 import runpy
 import shutil
@@ -40,6 +41,29 @@ class PackagingGuideTests(unittest.TestCase):
     def fail_validation(self):
         with self.assertRaises(ValidationError):
             VALIDATE(self.root)
+
+    def approve_synthetic_fixture(self):
+        """Pure test fixture, not real maintainer or rights-holder approval."""
+        contract_path = self.path(CONTRACT)
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["packagingAdoptionApproved"] = True
+        contract_path.write_text(json.dumps(contract), encoding="utf-8")
+        manifest = {
+            "contractSha256": hashlib.sha256(contract_path.read_bytes()).hexdigest(),
+            "documents": {
+                "PKG-DOC-01": hashlib.sha256(self.path(DOC1).read_bytes()).hexdigest(),
+                "PKG-DOC-02": hashlib.sha256(self.path(DOC2).read_bytes()).hexdigest()
+            },
+            "reviewers": {
+                "maintainer": "approved",
+                "build-engineering": "approved",
+                "Windows/QA": "approved",
+                "security/IP": "approved"
+            }
+        }
+        approved = REL / "synthetic-adoption.json"
+        self.path(approved).write_text(json.dumps(manifest), encoding="utf-8")
+        return approved, manifest
 
     def test_draft_docs_validate(self):
         self.assertEqual(VALIDATE(self.root), 19)
@@ -143,6 +167,41 @@ class PackagingGuideTests(unittest.TestCase):
         self.replace(DOC2, "# Raptora package use, build, maintenance and recovery",
                      "# Missing the correct title")
         self.fail_validation()
+
+
+    def test_coming_soon_placeholder_section(self):
+        path = self.path(DOC1)
+        source = path.read_text(encoding="utf-8")
+        start, end = source.index(WA01), source.index(WA02)
+        path.write_text(source[:start] + WA01 + "\nComing soon\n\n" +
+                        source[end:], encoding="utf-8")
+        self.fail_validation()
+
+    def test_synthetic_hash_bound_package_preflight(self):
+        approved, _ = self.approve_synthetic_fixture()
+        self.assertEqual(VALIDATE(self.root, package=True, adoption_rel=str(approved)), 19)
+
+    def test_modified_document_refuses_package_preflight(self):
+        approved, _ = self.approve_synthetic_fixture()
+        self.replace(DOC1, "Obtain an approved test plan", "Obtain a reviewed test plan")
+        with self.assertRaises(ValidationError):
+            VALIDATE(self.root, package=True, adoption_rel=str(approved))
+
+    def test_modified_contract_refuses_package_preflight(self):
+        approved, _ = self.approve_synthetic_fixture()
+        path = self.path(CONTRACT)
+        contract = json.loads(path.read_text(encoding="utf-8"))
+        contract["status"] = "altered-after-review"
+        path.write_text(json.dumps(contract), encoding="utf-8")
+        with self.assertRaises(ValidationError):
+            VALIDATE(self.root, package=True, adoption_rel=str(approved))
+
+    def test_incomplete_reviewers_refuses_package_preflight(self):
+        approved, manifest = self.approve_synthetic_fixture()
+        manifest["reviewers"]["security/IP"] = "pending"
+        self.path(approved).write_text(json.dumps(manifest), encoding="utf-8")
+        with self.assertRaises(ValidationError):
+            VALIDATE(self.root, package=True, adoption_rel=str(approved))
 
 
 if __name__ == "__main__":
