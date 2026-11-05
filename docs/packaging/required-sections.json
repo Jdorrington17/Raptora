@@ -1,0 +1,73 @@
+{
+  "formatVersion": 1,
+  "contractId": "RAPTORA-PACKAGING-DOCS-1",
+  "status": "draft-for-review",
+  "scope": "documentation-completeness-only",
+  "applicationValidation": false,
+  "packagingAdoptionApproved": false,
+  "documents": [
+    {
+      "id": "PKG-DOC-01",
+      "path": "docs/packaging/WINDOWS_ACCEPTANCE_AND_LIMITATIONS.md",
+      "genericDestinationRole": "distributed Windows acceptance and limitations guidance",
+      "requiredTitle": "Raptora Windows acceptance and limitations",
+      "requiredSections": [
+        {"id": "WA-01", "heading": "Authorisation and isolation", "requiredTopics": ["exact candidate and approved operation", "existing isolated target and synthetic data", "manual trusted execution and unavailable target"]},
+        {"id": "WA-02", "heading": "Recoverable baseline and backups", "requiredTopics": ["preserve acceptance baseline and rollback reference", "verified recoverable checkpoint or backup", "data inventory and checkpoint versus installer rollback"]},
+        {"id": "WA-03", "heading": "Package integrity and publisher trust", "requiredTopics": ["source/build identity and complete inventory", "archive/installer/manifest hash consistency", "signing/trust distinct from integrity", "original zone metadata"]},
+        {"id": "WA-04", "heading": "Installation and unavailable outcomes", "requiredTopics": ["elevation, identity, roots and permissions", "service, application and reboot checks", "PASS/FAIL/BLOCKED/NOT RUN", "unknown and unsupported evidence"]},
+        {"id": "WA-05", "heading": "Update and application-data preservation", "requiredTopics": ["verified representative upgrade baseline", "running/stopped state and safe refusal", "persisted data and unknown-file preservation", "schema/path compatibility"]},
+        {"id": "WA-06", "heading": "Repair, recovery and executed rollback", "requiredTopics": ["exact repair and invalid input refusal", "locks, failure and interruption", "eligible rollback target and executed verification", "protect journals, backups and current data"]},
+        {"id": "WA-07", "heading": "Uninstall ownership boundaries", "requiredTopics": ["owned components only", "running/stopped and held-file cases", "data/unknown-file retention", "approved reinstall and failure recovery"]},
+        {"id": "WA-08", "heading": "Policy, signatures and diagnostic limitations", "requiredTopics": ["effective policy and scopes", "no persistent policy change or enforced-control bypass", "actual diagnostics and subprocess chain", "separate connected acceptance"]},
+        {"id": "WA-09", "heading": "Evidence limits and release decision", "requiredTopics": ["private objective evidence and sanitised reporting", "separate synthetic, Windows, connected and trust gates", "review roles and no automatic release"]}
+      ]
+    },
+    {
+      "id": "PKG-DOC-02",
+      "path": "docs/packaging/PACKAGE_USE_BUILD_AND_RECOVERY.md",
+      "genericDestinationRole": "distributed package-use, build, maintenance and recovery guidance",
+      "requiredTitle": "Raptora package use, build, maintenance and recovery",
+      "requiredSections": [
+        {"id": "PU-01", "heading": "Reviewed prerequisites and build identity", "requiredTopics": ["reviewed candidate and supported prerequisites", "clean pinned frozen build inputs", "trusted manual Windows scheduling", "build is not distribution approval"]},
+        {"id": "PU-02", "heading": "Complete-package verification and launch", "requiredTopics": ["complete layout and companion files", "identity/hash/signature verification", "documented entrypoint only", "missing/unreadable/empty/incomplete guidance rejection"]},
+        {"id": "PU-03", "heading": "Elevation and identity boundaries", "requiredTopics": ["technician/helper/service/application identities", "cancellation and permission failure", "least privilege and operation-specific authorisation"]},
+        {"id": "PU-04", "heading": "Application and data separation", "requiredTopics": ["registered roots and protected application", "persisted data and unknown-file preservation", "approved schema/path changes only"]},
+        {"id": "PU-05", "heading": "Supported, unavailable and unverified capabilities", "requiredTopics": ["capability claims require evidence", "unknown/failure semantics", "synthetic versus connected work", "no health inference from service status"]},
+        {"id": "PU-06", "heading": "Update, repair and uninstall maintenance", "requiredTopics": ["exact supported operation and package", "graceful shutdown/lock/refusal handling", "managed ownership and data retention", "post-operation verification"]},
+        {"id": "PU-07", "heading": "Rollback provenance and compatibility", "requiredTopics": ["eligible prior release and matching transaction", "backup integrity and schema compatibility", "actual rollback and current-data verification", "checkpoint is not installer rollback"]},
+        {"id": "PU-08", "heading": "Interrupted operation and recovery", "requiredTopics": ["stop repeated operations and preserve failed state", "no deletion of locks/journals/backups to force progress", "reviewed exact recovery procedure", "verify actual recovery or report blocked"]},
+        {"id": "PU-09", "heading": "Logs and diagnostic evidence", "requiredTopics": ["protected local evidence and access/retention review", "identity/timestamp/outcome evidence", "no confidential public logs", "missing evidence is not PASS"]},
+        {"id": "PU-10", "heading": "PowerShell policy, signing and final limits", "requiredTopics": ["scope precedence and blocking scope/value", "no organisational/security/zone bypass", "hash integrity versus publisher authenticity", "actual Windows tests and separate approvals"]}
+      ]
+    }
+  ],
+  "structuralRules": {
+    "encoding": "UTF-8; optional BOM; LF or CRLF",
+    "requiredInputs": "both documents and this exact reviewed contract",
+    "requiredSectionSyntax": "## <id>: <heading>",
+    "requiredSectionOrder": "contract order",
+    "duplicateSectionIds": "reject",
+    "missingUnreadableEmptyWhitespaceOnly": "reject",
+    "missingOrRenamedRequiredHeading": "reject",
+    "emptyOrPlaceholderOnlySectionBody": "reject",
+    "placeholderOnlyValues": ["TODO", "TBD", "Coming soon", "[placeholder]"],
+    "fencedOrCommentedHeadings": "do not count",
+    "requiredTopics": "human semantic review required; keyword matches do not approve content",
+    "relativeLinks": "must resolve within reviewed document set and approved delivery layout",
+    "readOrValidationError": "fail closed; no complete-package success",
+    "historicalOrUnapprovedRevision": "reject even when structural checks pass"
+  },
+  "requiredContentReviewRoles": ["maintainer", "build-engineering", "Windows/QA", "security/IP"],
+  "requiredPrivateIntegrationCases": [
+    "missing input independently for each document",
+    "unreadable input independently for each document",
+    "empty and whitespace-only input independently for each document",
+    "missing required section independently for each document",
+    "placeholder-only, duplicate, fenced-only and commented-only required section",
+    "invalid encoding and malformed or unapproved contract",
+    "stale document with valid headings but unapproved content hash",
+    "clean build with excluded originals unavailable and stale output removed from input closure",
+    "every supported package variant and embedded/outer/link/manifest/hash agreement"
+  ]
+}

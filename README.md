@@ -18,6 +18,7 @@ Raptora is a security-system diagnostics and reporting application under active 
 - [Architecture and boundaries](docs/ARCHITECTURE.md)
 - [Build and release policy](docs/BUILD_AND_RELEASE.md)
 - [Integration safeguards](docs/INTEGRATION_SAFEGUARDS.md)
+- [Draft packaging guides and required-section contract](docs/packaging/VALIDATION_CONTRACT.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Public activity monitoring](docs/EXTERNAL_ACTIVITY.md)
 
