@@ -47,6 +47,7 @@ class PackagingGuideTests(unittest.TestCase):
         contract_path = self.path(CONTRACT)
         contract = json.loads(contract_path.read_text(encoding="utf-8"))
         contract["packagingAdoptionApproved"] = True
+        contract["status"] = "approved-for-packaging"
         contract_path.write_text(json.dumps(contract), encoding="utf-8")
         manifest = {
             "contractSha256": hashlib.sha256(contract_path.read_bytes()).hexdigest(),
@@ -202,6 +203,150 @@ class PackagingGuideTests(unittest.TestCase):
         self.path(approved).write_text(json.dumps(manifest), encoding="utf-8")
         with self.assertRaises(ValidationError):
             VALIDATE(self.root, package=True, adoption_rel=str(approved))
+
+    def set_first_body(self, body):
+        path = self.path(DOC1)
+        text = path.read_text(encoding="utf-8")
+        start, end = text.index(WA01), text.index(WA02)
+        path.write_text(text[:start] + WA01 + "\n" + body + "\n\n" + text[end:], encoding="utf-8")
+
+    def test_formatting_only_bodies_refuse(self):
+        for body in ("` `", "===", "~~TODO~~", "1. TBD", "&nbsp;\u200b", "<span></span>"):
+            with self.subTest(body=body):
+                self.set_first_body(body)
+                self.fail_validation()
+
+    def test_nested_heading_only_body_refuses(self):
+        self.set_first_body("### Future procedure")
+        self.fail_validation()
+
+    def test_reference_link_only_body_refuses(self):
+        self.set_first_body("[Support][help]\n\n[help]: https://example.invalid")
+        self.fail_validation()
+
+    def test_autolink_only_body_refuses(self):
+        self.set_first_body("<https://example.invalid>")
+        self.fail_validation()
+
+    def test_invalid_fence_closer_does_not_expose_headings(self):
+        self.replace(DOC1, WA01, "~~~\n~~~not-a-closing-fence\n" + WA01)
+        self.fail_validation()
+
+    def test_symlink_document_inside_root_refuses(self):
+        original = self.path(DOC1)
+        target = self.root / "other-guide.md"
+        original.rename(target)
+        original.symlink_to(target)
+        self.fail_validation()
+
+    def test_absolute_document_path_inside_root_refuses(self):
+        path = self.path(CONTRACT)
+        contract = json.loads(path.read_text(encoding="utf-8"))
+        contract["documents"][0]["path"] = str(self.path(DOC1))
+        path.write_text(json.dumps(contract), encoding="utf-8")
+        self.fail_validation()
+
+    def test_missing_adoption_contract_metadata_refuses_structure(self):
+        path = self.path(CONTRACT)
+        original = json.loads(path.read_text(encoding="utf-8"))
+        for key in ("status", "scope", "applicationValidation", "packagingAdoptionApproved", "requiredContentReviewRoles"):
+            with self.subTest(key=key):
+                changed = dict(original)
+                del changed[key]
+                path.write_text(json.dumps(changed), encoding="utf-8")
+                self.fail_validation()
+
+    def test_boolean_contract_version_refuses(self):
+        path = self.path(CONTRACT)
+        contract = json.loads(path.read_text(encoding="utf-8"))
+        contract["formatVersion"] = True
+        path.write_text(json.dumps(contract), encoding="utf-8")
+        self.fail_validation()
+
+    def test_non_object_adoption_record_has_controlled_error(self):
+        approved, _ = self.approve_synthetic_fixture()
+        self.path(approved).write_text("[]", encoding="utf-8")
+        with self.assertRaises(ValidationError):
+            VALIDATE(self.root, package=True, adoption_rel=str(approved))
+
+    def test_multiple_placeholders_or_bare_url_body_refuses(self):
+        for body in ("TODO TBD", "https://example.invalid"):
+            with self.subTest(body=body):
+                self.set_first_body(body)
+                self.fail_validation()
+
+    def test_out_of_root_and_traversal_document_paths_refuse(self):
+        path = self.path(CONTRACT)
+        contract = json.loads(path.read_text(encoding="utf-8"))
+        for name in ("../outside.md", "docs/packaging/../packaging/" + DOC1.name):
+            with self.subTest(name=name):
+                contract["documents"][0]["path"] = name
+                path.write_text(json.dumps(contract), encoding="utf-8")
+                self.fail_validation()
+
+    def test_symlink_contract_refuses(self):
+        path = self.path(CONTRACT)
+        target = self.root / "other-contract.json"
+        path.rename(target)
+        path.symlink_to(target)
+        self.fail_validation()
+
+    def test_symlink_adoption_record_refuses(self):
+        approved, _ = self.approve_synthetic_fixture()
+        path = self.path(approved)
+        target = self.root / "other-adoption.json"
+        path.rename(target)
+        path.symlink_to(target)
+        with self.assertRaises(ValidationError):
+            VALIDATE(self.root, package=True, adoption_rel=str(approved))
+
+    def test_missing_adoption_fields_refuse(self):
+        approved, manifest = self.approve_synthetic_fixture()
+        for key in ("contractSha256", "documents", "reviewers"):
+            with self.subTest(key=key):
+                changed = dict(manifest)
+                del changed[key]
+                self.path(approved).write_text(json.dumps(changed), encoding="utf-8")
+                with self.assertRaises(ValidationError):
+                    VALIDATE(self.root, package=True, adoption_rel=str(approved))
+
+    def test_missing_adoption_record_refuses(self):
+        self.approve_synthetic_fixture()
+        with self.assertRaises(ValidationError):
+            VALIDATE(self.root, package=True)
+
+    def test_symlink_relative_link_refuses(self):
+        target = self.root / "link-target.md"
+        target.write_text("Public synthetic fixture.", encoding="utf-8")
+        self.path(REL / "linked.md").symlink_to(target)
+        with self.path(DOC1).open("a", encoding="utf-8") as stream:
+            stream.write("\n[Companion](linked.md)\n")
+        self.fail_validation()
+
+    def test_malformed_required_topics_refuse(self):
+        path = self.path(CONTRACT)
+        contract = json.loads(path.read_text(encoding="utf-8"))
+        contract["documents"][0]["requiredSections"][0]["requiredTopics"] = [None]
+        path.write_text(json.dumps(contract), encoding="utf-8")
+        self.fail_validation()
+
+    def test_hidden_html_only_body_refuses(self):
+        self.set_first_body('<span hidden>not visible guidance</span>')
+        self.fail_validation()
+
+    def test_indented_code_only_body_refuses(self):
+        self.set_first_body('    example code, not explanatory guidance')
+        self.fail_validation()
+
+    def test_invisible_unicode_filler_only_body_refuses(self):
+        for body in ('\u3164', '\uffa0', '\u115f', '\u1160'):
+            with self.subTest(codepoint=ord(body)):
+                self.set_first_body(body)
+                self.fail_validation()
+
+    def test_nested_hidden_html_only_body_refuses(self):
+        self.set_first_body('<span hidden><span></span>hidden body</span>')
+        self.fail_validation()
 
 
 if __name__ == "__main__":

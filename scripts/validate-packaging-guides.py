@@ -12,6 +12,9 @@ import hashlib
 import json
 import re
 import sys
+import html
+import unicodedata
+from html.parser import HTMLParser
 from pathlib import Path
 
 ROLES = ("maintainer", "build-engineering", "Windows/QA", "security/IP")
@@ -19,9 +22,9 @@ HEADING = re.compile(r"^## ([A-Z]{2}-\d{2}): (.+?)\s*$")
 SECTION_ID = re.compile(r"^## ([A-Z]{2}-\d{2})\b")
 TOP_LEVEL = re.compile(r"^# (.+?)\s*$")
 SECOND_LEVEL = re.compile(r"^##(?!#)\s+")
-FENCE = re.compile(r"^\s{0,3}([\x60~])\1{2,}")
+FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 LINK = re.compile(r"!?\[[^\]]+\]\(([^)]+)\)")
-COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
+COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.DOTALL)
 PLACEHOLDERS = {"todo", "tbd", "comingsoon", "[placeholder]", "placeholder"}
 
 
@@ -47,7 +50,14 @@ def _utf8(raw: bytes, label: str) -> str:
 
 
 def _approved_path(root: Path, name: str) -> Path:
-    path = (root / name).resolve()
+    if not isinstance(name, str) or not name or Path(name).is_absolute() or "\\" in name or ":" in name or any(part in (".", "..", "") for part in name.split("/")):
+        raise ValidationError("approved input must be a safe relative path")
+    candidate = root
+    for part in Path(name).parts:
+        candidate = candidate / part
+        if candidate.is_symlink():
+            raise ValidationError("symlink approved input is not allowed")
+    path = candidate.resolve()
     if not path.is_relative_to(root.resolve()) or not path.is_file():
         raise ValidationError(f"invalid or missing approved relative input: {name}")
     return path
@@ -62,11 +72,12 @@ def _visible_lines(source: str) -> list[str]:
     for line in cleaned.splitlines():
         match = FENCE.match(line)
         if match:
-            char = match.group(1)
-            length = len(match.group(0).strip())
+            char = match.group(1)[0]
+            length = len(match.group(1))
             if not marker:
-                marker, minimum = char, length
-            elif marker == char and length >= minimum:
+                if char != "`" or "`" not in match.group(2):
+                    marker, minimum = char, length
+            elif marker == char and length >= minimum and not match.group(2).strip():
                 marker, minimum = "", 0
             continue
         if not marker:
@@ -74,14 +85,56 @@ def _visible_lines(source: str) -> list[str]:
     return result
 
 
+class _OutsideHTML(HTMLParser):
+    """Conservatively exclude raw HTML content, including nested hidden text."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.tags: list[str] = []
+        self.text: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list) -> None:
+        if tag not in {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}:
+            self.tags.append(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in self.tags:
+            last = len(self.tags) - 1 - self.tags[::-1].index(tag)
+            self.tags = self.tags[:last]
+
+    def handle_startendtag(self, tag: str, attrs: list) -> None:
+        pass
+
+    def handle_data(self, data: str) -> None:
+        if not self.tags:
+            self.text.append(data)
+
+
 def _substantive_body(body: str) -> bool:
+    # Raw HTML and indented code alone are not explanatory Markdown prose.
+    parser = _OutsideHTML()
+    parser.feed(body)
+    parser.close()
+    body = "".join(parser.text)
     lines = []
     for line in body.splitlines():
+        if line.startswith(("    ", "\t")):
+            continue
+        if re.match(r"^\s{0,3}(?:#{1,6}(?:\s|$)|\[[^\]]+\]:)", line):
+            continue
+        line = re.sub(r"<[^>]*>", "", line)
+        line = html.unescape(line)
+        # Hangul fillers render blank despite having Unicode letter categories.
+        line = "".join(c for c in line if unicodedata.category(c) != "Cf" and c not in "\u115f\u1160\u3164\uffa0")
         line = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", line)
         line = re.sub(r"\[[^\]]*\]\([^)]+\)", "", line)
         line = re.sub(r"^\s*[-*+]\s*\[[ xX]\]\s*", "", line)
-        normalized = re.sub(r"[\s#>*_\-:|.]", "", line).strip().lower()
-        if normalized and normalized not in PLACEHOLDERS:
+        line = re.sub(r"^\s*(?:[-*+]|\d+[.)])\s+", "", line)
+        line = re.sub(r"\[[^\]]*\](?:\[[^\]]*\])?", "", line)
+        line = re.sub(r"https?://\S+", "", line)
+        normalized = "".join(c for c in line.lower() if c.isalnum())
+        words = re.findall(r"\w+", line.lower())
+        if normalized and normalized not in PLACEHOLDERS and not (words and all(word in PLACEHOLDERS for word in words)):
             lines.append(normalized)
     return bool(lines)
 
@@ -94,6 +147,9 @@ def _links_resolve(root: Path, path: Path, source: str) -> None:
         dest = (path.parent / url).resolve()
         if not dest.is_relative_to(root.resolve()) or not dest.exists():
             raise ValidationError(f"broken/out-of-scope relative link in {path.name}: {url}")
+        candidate = path.parent / url
+        if any(p.is_symlink() for p in (candidate, *candidate.parents)):
+            raise ValidationError(f"symlink relative link in {path.name}")
 
 
 def _check_document(root: Path, doc: dict, source: str, path: Path) -> int:
@@ -128,25 +184,33 @@ def validate(root: Path, contract_rel: str = "docs/packaging/required-sections.j
         contract = json.loads(_utf8(contract_raw, "contract"))
     except (json.JSONDecodeError, UnicodeError) as exc:
         raise ValidationError("invalid content contract JSON") from exc
-    if not isinstance(contract, dict) or contract.get("formatVersion") != 1:
+    if not isinstance(contract, dict) or type(contract.get("formatVersion")) is not int or contract.get("formatVersion") != 1:
         raise ValidationError("unsupported/malformed content contract")
+    if (contract.get("status") not in ("draft-for-review", "approved-for-packaging")
+            or contract.get("scope") != "documentation-completeness-only"
+            or contract.get("applicationValidation") is not False
+            or type(contract.get("packagingAdoptionApproved")) is not bool
+            or contract.get("requiredContentReviewRoles") != list(ROLES)):
+        raise ValidationError("missing/malformed adoption contract metadata")
     if contract.get("contractId") != "RAPTORA-PACKAGING-DOCS-1":
         raise ValidationError("unexpected content contract identity")
     docs = contract.get("documents")
-    if not isinstance(docs, list) or [x.get("id") for x in docs if isinstance(x, dict)] != [
+    if not isinstance(docs, list) or not all(isinstance(x, dict) for x in docs) or [x.get("id") for x in docs] != [
         "PKG-DOC-01", "PKG-DOC-02"
     ]:
         raise ValidationError("both required document records must be present and ordered")
     for d in docs:
+        if any(not isinstance(d.get(key), str) or not d[key].strip() for key in ("path", "requiredTitle", "genericDestinationRole")):
+            raise ValidationError("malformed document identity/path/destination metadata")
         sections = d.get("requiredSections")
         if not isinstance(sections, list) or not sections:
             raise ValidationError(f"{d['id']}: no mandatory section contract")
         ids = [x.get("id") for x in sections if isinstance(x, dict)]
-        if len(ids) != len(sections) or len(ids) != len(set(ids)):
+        if len(ids) != len(sections) or any(not isinstance(i, str) or not re.fullmatch(r"[A-Z]{2}-\d{2}", i) for i in ids) or len(ids) != len(set(ids)):
             raise ValidationError(f"{d['id']}: malformed or duplicate contract section IDs")
         if any(not isinstance(x.get("heading"), str) or not x["heading"].strip()
                or not isinstance(x.get("requiredTopics"), list)
-               or not x["requiredTopics"] for x in sections):
+               or not x["requiredTopics"] or any(not isinstance(topic, str) or not topic.strip() for topic in x["requiredTopics"]) for x in sections):
             raise ValidationError(f"{d['id']}: malformed mandatory heading/topics")
     hashes = {}
     count = 0
@@ -158,6 +222,8 @@ def validate(root: Path, contract_rel: str = "docs/packaging/required-sections.j
     if package:
         if contract.get("packagingAdoptionApproved") is not True:
             raise ValidationError("packaging adoption is not approved by the contract")
+        if contract.get("status") != "approved-for-packaging":
+            raise ValidationError("packaging contract is still a draft")
         if not adoption_rel:
             raise ValidationError("exact reviewed adoption manifest required")
         approval_path = _approved_path(root, adoption_rel)
@@ -165,6 +231,8 @@ def validate(root: Path, contract_rel: str = "docs/packaging/required-sections.j
             approved = json.loads(_utf8(_read(approval_path), "adoption manifest"))
         except json.JSONDecodeError as exc:
             raise ValidationError("invalid adoption manifest JSON") from exc
+        if not isinstance(approved, dict):
+            raise ValidationError("adoption manifest must be an object")
         if approved.get("contractSha256") != hashlib.sha256(contract_raw).hexdigest():
             raise ValidationError("contract hash is not the approved version")
         if approved.get("documents") != hashes:
