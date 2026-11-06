@@ -2,14 +2,16 @@
 
 Status: **DRAFT FOR REVIEW**. Implements the drafting deliverable of [issue #15](https://github.com/Jdorrington17/Raptora/issues/15), using [PR #13 at 654f671](https://github.com/Jdorrington17/Raptora/pull/13) as the planning reference and the maintainer's sanitised contract in [issue #12](https://github.com/Jdorrington17/Raptora/issues/12). Actual private integration/validation belongs to [issue #16](https://github.com/Jdorrington17/Raptora/issues/16). No confidential original, private path, source extract or historical test claim was used as substitute content.
 
+**Reconciled 6 November 2026:** [The project owner approved the exact guides and contract](https://github.com/Jdorrington17/Raptora/issues/16#issuecomment-6671221489) at public revision `eccd53aa755bcdbdec7b314a15217ba461e93864` for controlled private adoption. This is one owner's consolidated decision across four responsibilities, not four independent signatures. [Issue #16 is closed](https://github.com/Jdorrington17/Raptora/issues/12#issuecomment-6673619251) after the reported protected-local packaging/transfer validation and revised-addendum approval. The public PR remains subject to review and explicit merge approval; application-source publication and release rights are not cleared. The two guide files and `required-sections.json` retain their approved byte identities, including the public `packagingAdoptionApproved: false`.
+
 ## Draft traceability matrix
 
 | Dependency | New document | Intended generic packaging destination role | Required sections | Current disposition |
 | --- | --- | --- | --- | --- |
-| PKG-DOC-01 | [Windows acceptance and limitations](WINDOWS_ACCEPTANCE_AND_LIMITATIONS.md) | Distributed Windows acceptance/limitations guidance accompanying the candidate | WA-01 through WA-09 | Newly authored draft; content review and packaging validation pending |
-| PKG-DOC-02 | [Package use, build, maintenance and recovery](PACKAGE_USE_BUILD_AND_RECOVERY.md) | Distributed package-use/build/maintenance/recovery guidance accompanying the candidate | PU-01 through PU-10 | Newly authored draft; content review and packaging validation pending |
+| PKG-DOC-01 | [Windows acceptance and limitations](WINDOWS_ACCEPTANCE_AND_LIMITATIONS.md) | Distributed Windows acceptance/limitations guidance accompanying the candidate | WA-01 through WA-09 | Owner-approved exact content; private packaging scope complete under #16 |
+| PKG-DOC-02 | [Package use, build, maintenance and recovery](PACKAGE_USE_BUILD_AND_RECOVERY.md) | Distributed package-use/build/maintenance/recovery guidance accompanying the candidate | PU-01 through PU-10 | Owner-approved exact content; private packaging scope complete under #16 |
 
-Both roles remain required. Do not remove a document or reclassify the confidential original as public. The local build reviewer must confirm the existing destination roles, consumer/link requirements, supported variants and any embedded/outer copies privately. Actual filenames, private consumers and implementation paths are intentionally absent from this matrix. These unresolved mappings prevent adoption, not drafting.
+Both roles remain required. Do not remove a document or reclassify the confidential original as public. The existing private mapping/procedure records were bound to the controlled #16 adoption and validation; actual filenames, private consumers and implementation paths remain confidential. Any future mapping/content change needs its own reviewed identity and validation; completion of the tested private scope does not approve other layouts or public-source migration.
 
 ## Structured content contract
 
@@ -25,18 +27,18 @@ The local validator must implement the following behavior before treating a cand
 6. Require human review of every `requiredTopics` entry for accuracy, safety and complete intended meaning. Structural checks and keyword matches cannot prove semantic completeness, operational correctness, confidentiality, rights or Windows acceptance. Preserve draft/untested limitations; reject false successful-acceptance or signing claims.
 7. On any read/validation/hash/approval error, fail the affected assembly before final success. If partial output exists, mark it incomplete/unusable and prevent acceptance of success manifests or distributable output. Preserve private failure evidence. Record failure accurately rather than claiming no filesystem writes occurred.
 
-This PR supplies documents and a contract only; it does not install a package validator, change a workflow, execute a build or claim the private packager now enforces these rules. Cloud document checks may establish structure and links; issue #16 owns actual fail-closed integration.
+This PR supplies public guides, a structured contract, a real public Python structural/adoption-record preflight, regression tests and unprivileged governance CI integration. Public fixtures do not execute the private packager. Actual private enforcement and assembly evidence are reported separately under completed issue #16; Cloud has verified the GitHub records, not independently rerun the confidential builds.
 
 ## Review and adoption record
 
 | Review role | Required decision on exact guide/contract hashes | Current status |
 | --- | --- | --- |
-| Maintainer | Content scope, required roles, exact adoption revision and handover disposition | PENDING |
-| Build engineering | Consumer/destination mapping, complete input closure, variants and packaging enforcement | PENDING |
-| Windows/QA | Procedure safety, prerequisites, lifecycle/recovery coverage and evidence limitations | PENDING |
-| Security/IP | Newly authored content, confidentiality, publication/rights and trust wording | PENDING |
+| Maintainer | Content scope, required roles, exact adoption revision and handover disposition | OWNER APPROVED for exact private adoption scope |
+| Build engineering | Consumer/destination mapping, complete input closure, variants and packaging enforcement | OWNER APPROVED; tested private scope completed under #16 |
+| Windows/QA | Procedure safety, prerequisites, lifecycle/recovery coverage and evidence limitations | OWNER APPROVED for private preparation/assembly; actual Windows lifecycle acceptance remains separate |
+| Security/IP | Newly authored content, confidentiality, publication/rights and trust wording | OWNER APPROVED for these public-safe inputs/internal adoption only; confidential application-source rights remain open |
 
-Independent Cloud documentation review is supporting evidence, not the above owners' sign-off. A merged documentation PR alone does not adopt these documents as installer inputs or authorise application source publication. All four decisions must be recorded for exact content before local packaging adoption. Keep confidential evidence and any private source IDs/hashes locally; return only approved public references.
+The owner exercised all four responsibilities in one recorded decision. Independent Cloud documentation review is supporting evidence, not additional human signatures. The public draft contract deliberately still fails package mode without a separately approved, explicitly versioned/hash-bound private variant and owner record. Issue #16 reports that private arrangement complete; this does not clear public-source publication, release signing/distribution, Windows lifecycle or merge authority. Keep private source identities, artifact hashes and raw evidence locally.
 
 ## Private integration test matrix
 
@@ -60,6 +62,6 @@ Actual Windows installer/service/upgrade/repair/rollback and persisted-data acce
 
 ## Local handover and unresolved assumptions
 
-After reviews, provide the public documentation commit, both public guide paths and SHA-256 hashes, contract path/hash/version, section IDs, generic destination roles, reviewer decisions and this matrix to issue #16 through the approved handover. Before adoption the local reviewer must resolve actual package mapping, link layout, version/platform prerequisites, candidate-specific entrypoint/recovery instructions and Windows evidence. The guides deliberately contain no invented runnable commands for unverified source.
+The exact-content handover and private mappings/procedures are recorded under #16. Operator-reported results include 12/12 actual negative assembly cases, 403/403 source-lock inputs, 131/131 payload files and 229/229 transfer ZIP entries, followed by exact revised-addendum approval. These are tested private static packaging results, not Windows installer/service/lifecycle acceptance. Future content/mapping changes must repeat the appropriate reviewed handover. The guides deliberately contain no invented candidate-specific commands; protected operational records and separate Windows evidence remain local.
 
-Any edit that changes required meaning, section IDs or delivered bytes requires a new content/hash review and updated provenance. Reconcile application-source changes after earlier local inventories; these guides do not approve a proposed source-file count or source manifest. Preserve confidential originals and historical build identities without editing them to mask differences. Issues #12, #15 and #16 remain open until their own review/acceptance dispositions are recorded; installer issues #4/#5 and the remaining publication gates are independent.
+Any edit that changes required meaning, section IDs or delivered bytes requires a new content/hash review and updated provenance. Reconcile application-source changes after earlier inventories; these guides do not approve a source-file count or publication manifest. Preserve confidential originals and historical build identities. Issue #15's drafting and #16's approved private packaging scope are completed; parent #12, installer issues #4/#5 and runner issue #14 retain their independent outstanding gates.
