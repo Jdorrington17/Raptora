@@ -1,0 +1,170 @@
+name: Raptora Windows Candidate Preflight
+
+# Public-safe, manual-only verification. No installer execution.
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha256:
+        description: 'Reviewed x64 setup executable SHA-256 (64 hexadecimal characters)'
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: raptora-acceptance
+  cancel-in-progress: false
+
+jobs:
+  candidate-preflight:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'Jdorrington17/Raptora' && github.ref == 'refs/heads/main' && github.actor == 'Jdorrington17' }}
+    runs-on: [self-hosted, Windows, X64, raptora-acceptance]
+    timeout-minutes: 10
+    env:
+      EXPECTED_SHA256: ${{ inputs.expected_sha256 }}
+
+    steps:
+      - name: Initialise public-safe fallback evidence
+        shell: cmd
+        run: |
+          if not exist "%RUNNER_TEMP%\raptora-candidate-preflight" mkdir "%RUNNER_TEMP%\raptora-candidate-preflight"
+          echo {"schema":"raptora-candidate-preflight-v1","result":"BLOCKED","reason":"preflight_not_completed"}>"%RUNNER_TEMP%\raptora-candidate-preflight\summary.json"
+
+      - name: Verify staged candidate and safe environment (read-only)
+        # This does not launch setup, edit journals, stop processes, or inspect customer data.
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File {0}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $folder = Join-Path $env:RUNNER_TEMP 'raptora-candidate-preflight'
+          $result = 'BLOCKED'
+          $reason = 'preflight_not_completed'
+          $hashMatch = $false
+          $existingProcessCount = $null
+          $journalCount = $null
+
+          try {
+            $expected = [string]$env:EXPECTED_SHA256
+            if ($expected -notmatch '^[a-fA-F0-9]{64}$') {
+              $reason = 'invalid_expected_sha256'
+              throw 'Preflight input rejected'
+            }
+
+            # Configured locally on the runner VM, not committed or passed through public inputs.
+            $candidatePath = [Environment]::GetEnvironmentVariable('RAPTORA_ACCEPTANCE_CANDIDATE', 'Machine')
+            $appRoot = [Environment]::GetEnvironmentVariable('RAPTORA_ACCEPTANCE_APP_ROOT', 'Machine')
+            if ([string]::IsNullOrWhiteSpace($candidatePath) -or
+                [string]::IsNullOrWhiteSpace($appRoot)) {
+              $reason = 'runner_candidate_configuration_missing'
+              throw 'Preflight configuration absent'
+            }
+            if (-not [IO.Path]::IsPathRooted($candidatePath) -or
+                -not [IO.Path]::IsPathRooted($appRoot)) {
+              $reason = 'runner_candidate_configuration_invalid'
+              throw 'Preflight configuration invalid'
+            }
+
+            $candidate = Get-Item -LiteralPath $candidatePath -ErrorAction SilentlyContinue
+            if ($null -eq $candidate -or $candidate.PSIsContainer -or $candidate.LinkType -or
+                $candidate.Name -notmatch '^Raptora-Setup-[0-9A-Za-z.-]+-x64\.exe$') {
+              $reason = 'candidate_not_staged_or_invalid'
+              throw 'Candidate not available'
+            }
+            # Never treat a public workflow checkout as an installer source.
+            if ($candidate.FullName.StartsWith($env:GITHUB_WORKSPACE + '\', [StringComparison]::OrdinalIgnoreCase)) {
+              $reason = 'candidate_inside_public_workspace'
+              throw 'Unsafe candidate provenance'
+            }
+
+            $actual = (Get-FileHash -LiteralPath $candidate.FullName -Algorithm SHA256).Hash
+            if ($actual -ne $expected) {
+              $result = 'FAIL'
+              $reason = 'candidate_sha256_mismatch'
+              throw 'Package integrity mismatch'
+            }
+            $hashMatch = $true
+
+            # Fail closed if any incomplete platform action or ambiguous transaction remains.
+            $installerState = Join-Path $appRoot '.installer'
+            $platformFile = Join-Path $installerState 'platform.json'
+            if (Test-Path -LiteralPath $platformFile -PathType Leaf) {
+              $platform = Get-Content -LiteralPath $platformFile -Raw | ConvertFrom-Json
+              if ([string]$platform.state -notin @('idle', 'complete', 'completed', 'restored')) {
+                $reason = 'platform_recovery_state_detected'
+                throw 'Recovery required'
+              }
+            }
+
+            $journalDir = Join-Path $installerState 'transactions'
+            $journals = @()
+            if (Test-Path -LiteralPath $journalDir -PathType Container) {
+              $journals = @(Get-ChildItem -LiteralPath $journalDir -Recurse -File -Filter 'journal.json' |
+                Select-Object -First 201)
+              if ($journals.Count -gt 200) {
+                $reason = 'journal_inventory_exceeds_review_limit'
+                throw 'Transaction inventory requires review'
+              }
+              foreach ($journalFile in $journals) {
+                $journal = Get-Content -LiteralPath $journalFile.FullName -Raw | ConvertFrom-Json
+                if ([string]$journal.state -notin @('complete', 'completed', 'committed', 'rolledback', 'rolled_back', 'restored')) {
+                  $reason = 'transaction_recovery_state_detected'
+                  throw 'Recovery required'
+                }
+              }
+            }
+            $journalCount = $journals.Count
+
+            # A second-launch test must first establish zero pre-existing application processes.
+            $existing = @(Get-CimInstance Win32_Process |
+              Where-Object { $_.Name -match '^(CertisMilestoneDashboard|CertisMilestoneDashboardSetup|Raptora-Setup.*)\.exe$' })
+            $existingProcessCount = $existing.Count
+            if ($existing.Count -gt 0) {
+              $reason = 'existing_raptora_processes_detected'
+              throw 'Existing processes require operator review'
+            }
+
+            $result = 'PASS'
+            $reason = 'read_only_preflight_passed'
+          }
+          catch {
+            # Do not upload host paths, process command lines, exception text, or private logs.
+            if ($reason -eq 'preflight_not_completed') {
+              $reason = 'unexpected_preflight_error'
+            }
+          }
+
+          $summary = [ordered]@{
+            schema = 'raptora-candidate-preflight-v1'
+            run_id = $env:GITHUB_RUN_ID
+            workflow_commit = $env:GITHUB_SHA
+            timestamp_utc = (Get-Date).ToUniversalTime().ToString('o')
+            candidate_sha256_verified = $hashMatch
+            existing_process_count = $existingProcessCount
+            reviewed_journal_count = $journalCount
+            result = $result
+            reason = $reason
+            installer_execution = 'NOT_RUN'
+            recovery_actions = 'NOT_RUN'
+          }
+          $summary | ConvertTo-Json -Depth 3 |
+            Set-Content -LiteralPath (Join-Path $folder 'summary.json') -Encoding UTF8
+
+          @(
+            '### Raptora candidate preflight'
+            ('- Result: **{0}**' -f $summary.result)
+            ('- Reason: {0}' -f $summary.reason)
+            ('- Candidate SHA-256 verified: {0}' -f $summary.candidate_sha256_verified)
+            '- Scope: read-only evidence; no installer execution, transaction recovery or data mutation'
+          ) | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding UTF8
+
+          if ($result -ne 'PASS') {
+            Write-Error ('Candidate preflight {0}: {1}' -f $result, $reason)
+          }
+
+      - name: Upload sanitised preflight summary
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: raptora-candidate-preflight-${{ github.run_id }}
+          path: ${{ runner.temp }}\raptora-candidate-preflight\summary.json
+          if-no-files-found: error
+          retention-days: 14
